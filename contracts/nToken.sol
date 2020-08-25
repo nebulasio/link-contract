@@ -117,7 +117,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
      */
     function updateMappingAccount(
         string memory _newRecipient
-    ) public checkNebulasAccount(_newRecipient) {
+    ) external checkNebulasAccount(_newRecipient) {
         require(
             keccak256(abi.encodePacked(mappingAccounts[msg.sender])) != keccak256(abi.encodePacked("")),
             "updateMappingAccount: Do not have staked!"
@@ -136,7 +136,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
      */
     function getMappingAccount(
         address _spender
-    ) public view returns (string memory) {
+    ) external view returns (string memory) {
         return mappingAccounts[_spender];
     }
 
@@ -213,14 +213,14 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     /**
      * @dev Current totally staking.
      */
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return _totalSupply;
     }
 
     /**
      * @dev Returns the amount of tokens owned by `_account`.
      */
-    function balanceOf(address _account) public view returns (uint256) {
+    function balanceOf(address _account) external view returns (uint256) {
         return _balances[_account];
     }
 }
