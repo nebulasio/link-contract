@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity 0.6.10;
 
 import "../utils/SafeERC20.sol";
 import "../utils/IERC20.sol";
@@ -103,11 +103,11 @@ contract nTokenController is MultiManager {
         actions[_flag][msg.sender] = true;
         executors[_flag].push(msg.sender);
         if (executors[_flag].length > allManagers / 2) {
-            require(_nToken.transferOut(_token, _recipient, _amount), "transferOut: Multi control transfer out failed!");
             for (uint256 index = 0; index < executors[_flag].length; index++) {
                 actions[_flag][executors[_flag][index]] = false;
             }
             delete executors[_flag];
+            require(_nToken.transferOut(_token, _recipient, _amount), "transferOut: Multi control transfer out failed!");
         }
 
         emit TransferOut(_nToken, _recipient, _amount, _token);
