@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma solidity 0.6.10;
 
 import "./utils/IERC20.sol";
 import "./utils/SafeMath.sol";
@@ -50,16 +50,6 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @dev Update controller contract.
-     */
-    function updateController(address _newController) external onlyOwner {
-        require(_newController != nTokenController, "updateController: The same controller!");
-        address _oldController = nTokenController;
-        nTokenController = _newController;
-        emit UpdateController(_oldController, _newController);
-    }
-
-    /**
      * @dev Sets the values for {underlyingToken}, {nTokenController} and {_owner}.
      */
     constructor(
@@ -93,6 +83,16 @@ contract NebulasToken is Pausable, ReentrancyGuard {
         emit OwnershipTransferred(address(0), _newOwner);
 
         _initialized = true;
+    }
+
+    /**
+     * @dev Update controller contract.
+     */
+    function updateController(address _newController) external onlyOwner {
+        require(_newController != nTokenController, "updateController: The same controller!");
+        address _oldController = nTokenController;
+        nTokenController = _newController;
+        emit UpdateController(_oldController, _newController);
     }
 
     /**
