@@ -8,6 +8,12 @@
 ~/link-contract$ npm install
 ```
 
+And also need to install `truffle`:
+
+```
+npm install -g truffle
+```
+
 ### Set config
 
 ```
@@ -15,6 +21,12 @@
 ```
 
 You need to edit the `.env` file with your local environment variables.
+
+### Compile
+
+```
+~/link-contract$ truffle compile
+```
 
 
 ### Deploy
