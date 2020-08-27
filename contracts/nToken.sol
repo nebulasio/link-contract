@@ -117,7 +117,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
      */
     function updateMappingAccount(
         string memory _newRecipient
-    ) external checkNebulasAccount(_newRecipient) {
+    ) public checkNebulasAccount(_newRecipient) {
         require(
             keccak256(abi.encodePacked(mappingAccounts[msg.sender])) != keccak256(abi.encodePacked("")),
             "updateMappingAccount: Do not have staked!"
