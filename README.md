@@ -17,10 +17,18 @@ npm install -g truffle
 ### Set config
 
 ```
-~/link-contract$ mv .env.example .env
+~/link-contract$ mv .example.env .env
 ```
 
 You need to edit the `.env` file with your local environment variables.
+
+```
+INFURA_APIKEY: Infura key.
+PRIVATE_KEYS: The private key of the deployer.
+CONTROLLER_MANAGERS: All original managers.
+PROXY_ADMIN: Account of proxy administrator.
+CONTRACT_OWNER: Owner account of the Nebulas staking contract.
+```
 
 ### Compile
 

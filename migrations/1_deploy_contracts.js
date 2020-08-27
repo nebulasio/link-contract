@@ -1,8 +1,4 @@
-// const Migrations = artifacts.require("Migrations");
-
-// module.exports = function(deployer) {
-//   deployer.deploy(Migrations);
-// };
+require('dotenv').config();
 
 const Controller = artifacts.require("nTokenController");
 const NebulasToken = artifacts.require("NebulasToken");
@@ -10,15 +6,16 @@ const Proxy = artifacts.require("AdminUpgradeabilityProxy");
 const USDT = artifacts.require("ERC20Token");
 
 let usdt;
+const newManagers = JSON.parse(process.env.CONTROLLER_MANAGERS);
+// Pause contract.
+const owner = process.env.CONTRACT_OWNER;
+// Set new implement.
+const proxyAdmin = process.env.PROXY_ADMIN;
 
 module.exports = async function (deployer, network, accounts) {
   // Contract deployer of all the contracts, so at the same time it is also the contract owner.
   let contractDeployer = accounts[0];
-  // Pause contract.
-  let owner = accounts[1];
-  // Set new implement.
-  let proxyAdmin = accounts[2];
-  let newManagers = [accounts[3], accounts[4], accounts[5]];
+
   if (network == 'mainnet') {
     usdt = await USDT.at("0xdAC17F958D2ee523a2206206994597C13D831ec7");
   } else {
