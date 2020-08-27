@@ -37,10 +37,27 @@ CONTRACT_OWNER: Owner account of the Nebulas staking contract.
 ```
 
 
-### Deploy
+### Deploy on the production environment.
 
 ```
-~/link-contract$ truffle migrate --network rinkeby[ropsten/kovan/mainnet/development]
+~/link-contract$ truffle migrate --network rinkeby[/ropsten/kovan/mainnet]
+```
+
+### Deploy on the local net
+
+At first, just runs a local node, you can use package named `ganache-cli` or [ganache application](https://www.trufflesuite.com/ganache). At here, just use package.
+
+```
+~/$ npm install -g ganache-cli
+~/$ ganache-cli --port=7545 --gasLimit=8000000 --accounts=10 --defaultBalanceEther=1000
+```
+
+*Need to open a new terminal to start the above commands.*
+
+Go back to the original terminal:
+
+```
+~/link-contract$ truffle migrate --network development
 ```
 
 ### Contracts on the testnet: Ropsten/Kovan/Rinkeby(08-25)
