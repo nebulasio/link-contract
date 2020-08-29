@@ -16,6 +16,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
 
     address public nTokenController;
     IERC20 public underlyingToken;
+    address public feeRecipient;
 
     bool private _initialized = false;
 
@@ -32,7 +33,9 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     event UpdateMappingAccount(address indexed spender, string indexed oldRecipient, string indexed newRecipient, address underlyingToken);
 
     event Staked(address indexed ethereumSpender, string indexed nebulasRecipient, uint256 indexed amount, address caller);
-    event Refund(string indexed nebulasSpender, address indexed ethereumRecipient, uint256 indexed amount);
+    event Refund(string indexed nebulasSpender, address indexed ethereumRecipient, uint256 indexed amount, uint256 fee);
+    event UpdateFeeRecipient(address indexed oldFeeRecipient, address indexed newFeeRecipient);
+
 
     modifier onlyController(address _caller) {
         require(_caller == nTokenController, "onlyController: Caller is not the controller!");
@@ -55,9 +58,10 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     constructor(
         address _newOwner,
         IERC20 _underlyingToken,
-        address _nTokenController
+        address _nTokenController,
+        address _feeRecipient
     ) public {
-        initialize(_newOwner, _underlyingToken, _nTokenController);
+        initialize(_newOwner, _underlyingToken, _nTokenController, _feeRecipient);
     }
 
     /**
@@ -66,7 +70,8 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     function initialize(
         address _newOwner,
         IERC20 _underlyingToken,
-        address _nTokenController
+        address _nTokenController,
+        address _feeRecipient
     ) public {
         require(!_initialized, "initialize: Contract is already initialized!");
 
@@ -74,9 +79,14 @@ contract NebulasToken is Pausable, ReentrancyGuard {
             _newOwner != address(0),
             "initialize: New owner is the zero address!"
         );
+        require(
+            _feeRecipient != address(0),
+            "initialize: Fee recipient is the zero address!"
+        );
 
         underlyingToken = _underlyingToken;
         nTokenController = _nTokenController;
+        feeRecipient = _feeRecipient;
         _status = 1;
 
         _owner = _newOwner;
@@ -165,13 +175,16 @@ contract NebulasToken is Pausable, ReentrancyGuard {
 
     /**
      * @dev Returns asset on the ethereum to user.
+     * @param _nebulasAccount Account on the nebulas chain that requests for a refund.
      * @param _recipient Account on the ethereum to get assets returned.
      * @param _amount Amount to return to user.
+     * @param _fee Charge some fee when refunding.
      */
     function refund(
         string memory _nebulasAccount,
         address _recipient,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _fee
     ) external onlyOwner nonReentrant checkNebulasAccount(_nebulasAccount) returns (bool) {
         require(
             convertMappingAccounts[_nebulasAccount] == _recipient,
@@ -182,14 +195,29 @@ contract NebulasToken is Pausable, ReentrancyGuard {
             keccak256(abi.encodePacked(mappingAccounts[_recipient])) != keccak256(abi.encodePacked("")),
             "refund: Do not have staked!"
         );
-        require(_balances[_recipient] >= _amount, "refund: Insufficient balance!");
+        require(_balances[_recipient] >= _amount.add(_fee), "refund: Insufficient balance!");
 
-        _balances[_recipient] = _balances[_recipient].sub(_amount);
-        _totalSupply = _totalSupply.sub(_amount);
+        _balances[_recipient] = _balances[_recipient].sub(_amount).sub(_fee);
+        _totalSupply = _totalSupply.sub(_amount).sub(_fee);
         underlyingToken.safeTransfer(_recipient, _amount);
+        underlyingToken.safeTransfer(feeRecipient, _fee);
 
-        emit Refund(_nebulasAccount, _recipient, _amount);
+        emit Refund(_nebulasAccount, _recipient, _amount, _fee);
 
+        return true;
+    }
+
+    /**
+     * @dev Reset the charging fee account.
+     */
+    function updateFeeRecipient(
+        address _newFeeRecipient
+    ) external onlyController(msg.sender) returns (bool) {
+        require(_newFeeRecipient != feeRecipient, "updateFeeRecipient: New fee recipient is the same!");
+        address _oldFeeRecipient = feeRecipient;
+        feeRecipient = _newFeeRecipient;
+
+        emit UpdateFeeRecipient(_oldFeeRecipient, _newFeeRecipient);
         return true;
     }
 

@@ -11,6 +11,8 @@ const newManagers = JSON.parse(process.env.CONTROLLER_MANAGERS);
 const owner = process.env.CONTRACT_OWNER;
 // Set new implement.
 const proxyAdmin = process.env.PROXY_ADMIN;
+// Fee recipient
+const feeRecipient = process.env.FEE_RECIPIENT;
 
 module.exports = async function (deployer, network, accounts) {
   // Contract deployer of all the contracts, so at the same time it is also the contract owner.
@@ -33,13 +35,13 @@ module.exports = async function (deployer, network, accounts) {
   await controller_proxy.initialize(newManagers);
 
   // Deploy nToken.
-  await deployer.deploy(NebulasToken, owner, usdt.address, controller_proxy.address);
+  await deployer.deploy(NebulasToken, owner, usdt.address, controller_proxy.address, feeRecipient);
   let nToken = await NebulasToken.deployed();
   // Deploy proxy for nToken.
   await deployer.deploy(Proxy, nToken.address, proxyAdmin, "0x", {'from':contractDeployer});
   let nebulas_token_proxy = await Proxy.deployed();
   let nToken_proxy = await NebulasToken.at(nebulas_token_proxy.address);
-  await nToken_proxy.initialize(owner, usdt.address, controller_proxy.address);
+  await nToken_proxy.initialize(owner, usdt.address, controller_proxy.address, feeRecipient);
 
   console.log("Deploy contract for Nebulas Token")
   console.log("Deployer address is:      ", contractDeployer);

@@ -23,11 +23,12 @@ npm install -g truffle
 You need to edit the `.env` file with your local environment variables.
 
 ```
+CONTRACT_OWNER: Owner account of the Nebulas staking contract.
+CONTROLLER_MANAGERS: All original managers.
+FEE_RECIPIENT: Account to receive fee.
 INFURA_APIKEY: Infura key.
 PRIVATE_KEYS: The private key of the deployer.
-CONTROLLER_MANAGERS: All original managers.
 PROXY_ADMIN: Account of proxy administrator.
-CONTRACT_OWNER: Owner account of the Nebulas staking contract.
 ```
 
 ### Compile

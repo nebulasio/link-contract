@@ -5,6 +5,7 @@ import "../utils/IERC20.sol";
 
 interface NebulasToken {
     function transferOut(IERC20 token, address recipient, uint256 amount) external returns (bool);
+    function updateFeeRecipient(address _newFeeRecipient) external returns (bool);
 }
 
 contract MultiManager {
@@ -74,7 +75,8 @@ contract nTokenController is MultiManager {
     using SafeERC20 for IERC20;
     bool private _initialized = false;
 
-    event TransferOut(NebulasToken indexed nToken, address indexed recipient, uint256 indexed amount, IERC20 token);
+    event ProposalTransferOut(NebulasToken indexed nToken, address indexed recipient, uint256 indexed amount, IERC20 token);
+    event ProposalUpdateFeeRecipient(NebulasToken indexed nToken, address indexed newFeeRecipient);
 
     constructor(
         address[] memory _newManagers
@@ -97,6 +99,9 @@ contract nTokenController is MultiManager {
         _initialized = true;
     }
 
+    /**
+     * @dev Transfer token out when users transfer token to the contract directly.
+     */
     function transferOut(NebulasToken _nToken, IERC20 _token, address _recipient, uint256 _amount) external isManager(msg.sender) {
         bytes32 _flag = keccak256(abi.encodePacked(this.transferOut.selector, _recipient, _amount));
         require(!actions[_flag][msg.sender], "transferOut: Has confirmed!");
@@ -110,7 +115,26 @@ contract nTokenController is MultiManager {
             require(_nToken.transferOut(_token, _recipient, _amount), "transferOut: Multi control transfer out failed!");
         }
 
-        emit TransferOut(_nToken, _recipient, _amount, _token);
+        emit ProposalTransferOut(_nToken, _recipient, _amount, _token);
+    }
+
+    /**
+     * @dev Reset charging fee account.
+     */
+    function updateFeeRecipient(NebulasToken _nToken, address _newFeeRecipient) external isManager(msg.sender) {
+        bytes32 _flag = keccak256(abi.encodePacked(this.updateFeeRecipient.selector, _newFeeRecipient));
+        require(!actions[_flag][msg.sender], "updateFeeRecipient: Has confirmed!");
+        actions[_flag][msg.sender] = true;
+        executors[_flag].push(msg.sender);
+        if (executors[_flag].length > allManagers / 2) {
+            for (uint256 index = 0; index < executors[_flag].length; index++) {
+                actions[_flag][executors[_flag][index]] = false;
+            }
+            delete executors[_flag];
+            require(_nToken.updateFeeRecipient(_newFeeRecipient), "updateFeeRecipient: Update fee recipient failed!");
+        }
+
+        emit ProposalUpdateFeeRecipient(_nToken, _newFeeRecipient);
     }
 }
 
