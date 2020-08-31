@@ -41,7 +41,7 @@ PROXY_ADMIN: Account of proxy administrator.
 ### Deploy on the production environment.
 
 ```
-~/link-contract$ truffle migrate --network rinkeby[/ropsten/kovan/mainnet]
+~/link-contract$ truffle migrate --network rinkeby[/kovan/mainnet]
 ```
 
 ### Deploy on the local net
@@ -74,19 +74,19 @@ Go back to the original terminal:
 	</tr>
 	<tr>
 		<td> nToken Controller </td>
-		<td> 0x51253444A60aB482d800E759Bb2E8D37032F9298 </td>
+		<td> 0x4357d9ae483C88a1Da6b75fa8575b99648AA2586 </td>
 	</tr>
 	<tr>
 		<td> nToken Controller Proxy </td>
-		<td> 0x6364e47802AA278313c9Cb9BdF074d624b516bb9 </td>
+		<td> 0x7e966442c70be4376c780B76A1c053a25051bB1D </td>
 	</tr>
 	<tr>
 		<td> Nebulas Staking </td>
-		<td> 0xC903569CAF5c064b95a4230A8AfCc956d3563FFf </td>
+		<td> 0xc8CAcEAcCD5742d394A51A0bEd2B305D4390CA8D </td>
 	</tr>
 	<tr>
 		<td> Nebulas Staking Proxy </td>
-		<td> 0x8F3dDFc523d56911BEDE3A10Dc3581E1238bFAca </td>
+		<td> 0x6f0116ddF2764c119e846b3292Be06Aa7Ca5522D </td>
 	</tr>
 </table>
 
@@ -105,6 +105,10 @@ Go back to the original terminal:
 	</tr>
 	<tr>
 		<td> Nebulas Staking Owner </td>
+		<td> 0x3A40066D1dC27d14C721e4135cF02DCb20C9AFE0</td>
+	</tr>
+	<tr>
+		<td> Nebulas Staking Fee Recipient </td>
 		<td> 0x3A40066D1dC27d14C721e4135cF02DCb20C9AFE0</td>
 	</tr>
 </table>

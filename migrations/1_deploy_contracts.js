@@ -20,6 +20,8 @@ module.exports = async function (deployer, network, accounts) {
 
   if (network == 'mainnet') {
     usdt = await USDT.at("0xdAC17F958D2ee523a2206206994597C13D831ec7");
+  } else if (network != 'development') {
+    usdt = await USDT.at("0x53FAE6878086eA050cB0eB6322bD425C1774F675");
   } else {
     // Deploys USDT contract.
     await deployer.deploy(USDT);
