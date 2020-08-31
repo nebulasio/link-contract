@@ -29,11 +29,11 @@ contract NebulasToken is Pausable, ReentrancyGuard {
 
     event UpdateController(address indexed oldController, address indexed newController);
 
-    event NewMappingAccount(address indexed underlyingToken, address indexed spender, string indexed recipient);
-    event UpdateMappingAccount(address indexed spender, string indexed oldRecipient, string indexed newRecipient, address underlyingToken);
+    event NewMappingAccount(address indexed underlyingToken, address indexed spender, string recipient);
+    event UpdateMappingAccount(address indexed spender, string newRecipient,  string oldRecipient, address underlyingToken);
 
-    event Staked(address indexed ethereumSpender, string indexed nebulasRecipient, uint256 indexed amount, address caller);
-    event Refund(string indexed nebulasSpender, address indexed ethereumRecipient, uint256 indexed amount, uint256 fee);
+    event Staked(address indexed ethereumSpender, uint256 indexed amount, string nebulasRecipient);
+    event Refund(address indexed ethereumRecipient, uint256 indexed amount, string nebulasSpender, uint256 fee);
     event UpdateFeeRecipient(address indexed oldFeeRecipient, address indexed newFeeRecipient);
 
 
@@ -169,7 +169,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
         _balances[msg.sender] = _balances[msg.sender].add(_actualStakeAmount);
         _totalSupply = _totalSupply.add(_actualStakeAmount);
 
-        emit Staked(msg.sender, _nebulasAccount, _actualStakeAmount, msg.sender);
+        emit Staked(msg.sender, _actualStakeAmount, _nebulasAccount);
         return true;
     }
 
@@ -202,7 +202,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
         underlyingToken.safeTransfer(_recipient, _amount);
         underlyingToken.safeTransfer(feeRecipient, _fee);
 
-        emit Refund(_nebulasAccount, _recipient, _amount, _fee);
+        emit Refund(_recipient, _amount, _nebulasAccount, _fee);
 
         return true;
     }
