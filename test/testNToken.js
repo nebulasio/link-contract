@@ -13,7 +13,7 @@ describe("DToken Contract", function () {
   let user1, user2, user3;
   let newManagers;
   let controller, controller_proxy;
-  let usdt, nToken, nToken_proxy;
+  let usdt, nToken, nToken_proxy, feeRecipient;
   let nTokenAddress1 = 'n1NQtv9QgAhdGTSkxwpU8bLMeCxRAp8modW';
   let nTokenAddress2 = 'n1d7yrpTarJjQ4TzHCHWWZnntpnydNCHNK6';
   let nTokenAddress3 = 'n1F4y2U3qTyqaGydghxnRqgu6eVYaTwVk2A';
@@ -32,6 +32,7 @@ describe("DToken Contract", function () {
       user1,
       user2,
       user3,
+      feeRecipient,
     ] = await web3.eth.getAccounts();
   });
 
@@ -47,11 +48,11 @@ describe("DToken Contract", function () {
     // Deploy USDT.
     usdt = await USDT.new();
     // Deploy nToken.
-    nToken = await NebulasToken.new(owner, usdt.address, controller_proxy.address);
+    nToken = await NebulasToken.new(owner, usdt.address, controller_proxy.address, feeRecipient);
     // Deploy proxy for nToken.
     let nebulas_token_proxy = await Proxy.new(nToken.address, proxyAdmin, "0x");
     nToken_proxy = await NebulasToken.at(nebulas_token_proxy.address);
-    await nToken_proxy.initialize(owner, usdt.address, controller_proxy.address);
+    await nToken_proxy.initialize(owner, usdt.address, controller_proxy.address, feeRecipient);
   }
 
   describe("Deployment", function () {
@@ -59,7 +60,7 @@ describe("DToken Contract", function () {
       await resetContracts();
 
       await truffleAssert.reverts(
-        nToken_proxy.initialize(owner, usdt.address, controller_proxy.address, {
+        nToken_proxy.initialize(owner, usdt.address, controller_proxy.address, feeRecipient, {
           from: contractDeployer,
         }),
         "initialize: Contract is already initialized!"
@@ -103,16 +104,42 @@ describe("DToken Contract", function () {
     });
 
     it("Return staking asset to user", async function () {
-      let refundAmount = (await nToken_proxy.balanceOf(manager1)).toString();
+      let totalAmount = (await nToken_proxy.balanceOf(manager1)).toString();
+      let feeAmount = (new BN(totalAmount)).mul(new BN(3)).div(new BN(1000));
+      let refundAmount = (new BN(totalAmount)).sub(feeAmount);
       let refundByNebulasAccount = await nToken_proxy.getMappingAccount(manager1);
       let refundToEthereumAccount = await nToken_proxy.convertMappingAccounts(refundByNebulasAccount);
-      await nToken_proxy.refund(refundByNebulasAccount, refundToEthereumAccount, refundAmount, { from: owner });
+      let manager1OriginalUSDTBalance = await usdt.balanceOf(manager1);
+      let feerOriginalUSDTBalance = await usdt.balanceOf(feeRecipient);
+
+      assert.equal((await usdt.balanceOf(feeRecipient)).toString(), "0");
+
+      await nToken_proxy.refund(refundByNebulasAccount, refundToEthereumAccount, refundAmount, feeAmount, { from: owner });
 
       let user1StakingAmout = (await nToken_proxy.balanceOf(manager1)).toString();
       let totalStakingAmount = (await nToken_proxy.totalSupply()).toString();
+      let manager1CurrentUSDTBalance = await usdt.balanceOf(manager1);
+      let feerCurrentUSDTBalance = await usdt.balanceOf(feeRecipient);
+
+      let manager1USDTChangingBalance = (new BN(manager1CurrentUSDTBalance)).sub(new BN(manager1OriginalUSDTBalance));
+      let feerUSDTChangingBalance = (new BN(feerCurrentUSDTBalance)).sub(new BN(feerOriginalUSDTBalance));
 
       assert.equal(user1StakingAmout, "0");
+      // TODO: Compare by changing amount!
       assert.equal(user1StakingAmout, totalStakingAmount);
+      assert.equal(manager1USDTChangingBalance.toString(), refundAmount.toString());
+      assert.equal(feerUSDTChangingBalance.toString(), feeAmount.toString());
+    });
+
+    it("Update fee recipient account", async function () {
+      let newFeer = manager4;
+      assert.equal(await nToken_proxy.feeRecipient(), feeRecipient);
+
+      await controller_proxy.updateFeeRecipient(nToken_proxy.address, newFeer, { from: manager1 });
+      assert.equal(await nToken_proxy.feeRecipient(), feeRecipient);
+      await controller_proxy.updateFeeRecipient(nToken_proxy.address, newFeer, { from: manager2 });
+
+      assert.equal(await nToken_proxy.feeRecipient(), newFeer);
     });
 
     it("Transfer unexpected asset out", async function () {
@@ -178,6 +205,5 @@ describe("DToken Contract", function () {
         "Pausable: paused"
       );
     });
-
   });
 });
