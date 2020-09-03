@@ -19,6 +19,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     address public feeRecipient;
 
     bool private _initialized = false;
+    IChi public constant chi = IChi(0x0000000000004946c0e9F43F4Dee607b0eF1fA1c);
 
     // Record the addresses of the ethereum chain corresponding to the nebulas chain.
     // eg: account(at ethereum) => account(at nebulas).
@@ -50,6 +51,13 @@ contract NebulasToken is Pausable, ReentrancyGuard {
             );
         require(accountBytes.length == 35, "checkNebulasAccount: Invalid nebulas account length!");
         _;
+    }
+
+    modifier discountCHI {
+        uint256 gasStart = gasleft();
+        _;
+        uint256 gasSpent = 21000 + gasStart - gasleft() + 16 *  msg.data.length;
+        chi.freeFromUpTo(msg.sender, (gasSpent + 14154) / 41947);
     }
 
     /**
@@ -158,7 +166,13 @@ contract NebulasToken is Pausable, ReentrancyGuard {
     function stake(
         uint256 _amount,
         string memory _nebulasAccount
-    ) external whenNotPaused nonReentrant checkNebulasAccount(_nebulasAccount) returns (bool) {
+    ) external
+        whenNotPaused
+        nonReentrant
+        checkNebulasAccount(_nebulasAccount)
+        discountCHI
+        returns (bool)
+    {
         require(_amount > 0, "stake: Staking amount should be greater than 0!");
         uint256 _originalBalance = underlyingToken.balanceOf(address(this));
         underlyingToken.safeTransferFrom(msg.sender, address(this), _amount);
@@ -185,7 +199,7 @@ contract NebulasToken is Pausable, ReentrancyGuard {
         address _recipient,
         uint256 _amount,
         uint256 _fee
-    ) external onlyOwner nonReentrant checkNebulasAccount(_nebulasAccount) returns (bool) {
+    ) external onlyOwner nonReentrant checkNebulasAccount(_nebulasAccount) discountCHI returns (bool) {
         require(
             convertMappingAccounts[_nebulasAccount] == _recipient,
             "refund: Mismatch accounts!"

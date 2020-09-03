@@ -75,8 +75,17 @@ contract nTokenController is MultiManager {
     using SafeERC20 for IERC20;
     bool private _initialized = false;
 
+    IChi public constant chi = IChi(0x0000000000004946c0e9F43F4Dee607b0eF1fA1c);
+
     event ProposalTransferOut(NebulasToken indexed nToken, address indexed recipient, uint256 indexed amount, IERC20 token);
     event ProposalUpdateFeeRecipient(NebulasToken indexed nToken, address indexed newFeeRecipient);
+
+    modifier discountCHI {
+        uint256 gasStart = gasleft();
+        _;
+        uint256 gasSpent = 21000 + gasStart - gasleft() + 16 *  msg.data.length;
+        chi.freeFromUpTo(msg.sender, (gasSpent + 14154) / 41947);
+    }
 
     constructor(
         address[] memory _newManagers
@@ -102,7 +111,12 @@ contract nTokenController is MultiManager {
     /**
      * @dev Transfer token out when users transfer token to the contract directly.
      */
-    function transferOut(NebulasToken _nToken, IERC20 _token, address _recipient, uint256 _amount) external isManager(msg.sender) {
+    function transferOut(
+        NebulasToken _nToken,
+        IERC20 _token,
+        address _recipient,
+        uint256 _amount
+    ) external isManager(msg.sender) discountCHI {
         bytes32 _flag = keccak256(abi.encodePacked(this.transferOut.selector, _recipient, _amount));
         require(!actions[_flag][msg.sender], "transferOut: Has confirmed!");
         actions[_flag][msg.sender] = true;
@@ -121,7 +135,10 @@ contract nTokenController is MultiManager {
     /**
      * @dev Reset charging fee account.
      */
-    function updateFeeRecipient(NebulasToken _nToken, address _newFeeRecipient) external isManager(msg.sender) {
+    function updateFeeRecipient(
+        NebulasToken _nToken,
+        address _newFeeRecipient
+    ) external isManager(msg.sender) discountCHI {
         bytes32 _flag = keccak256(abi.encodePacked(this.updateFeeRecipient.selector, _newFeeRecipient));
         require(!actions[_flag][msg.sender], "updateFeeRecipient: Has confirmed!");
         actions[_flag][msg.sender] = true;
