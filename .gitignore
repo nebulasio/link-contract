@@ -106,4 +106,4 @@ dist
 # Cache
 artifacts
 cache
-/build
+build
