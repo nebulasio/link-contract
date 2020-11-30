@@ -186,18 +186,8 @@ contract NebulasToken is Pausable, ReentrancyGuard {
         uint256 _amount,
         uint256 _fee
     ) external onlyOwner nonReentrant checkNebulasAccount(_nebulasAccount) returns (bool) {
-        require(
-            convertMappingAccounts[_nebulasAccount] == _recipient,
-            "refund: Mismatch accounts!"
-        );
         require(_amount > 0, "refund: Refund amount should be greater than 0!");
-        require(
-            keccak256(abi.encodePacked(mappingAccounts[_recipient])) != keccak256(abi.encodePacked("")),
-            "refund: Do not have staked!"
-        );
-        require(_balances[_recipient] >= _amount.add(_fee), "refund: Insufficient balance!");
 
-        _balances[_recipient] = _balances[_recipient].sub(_amount).sub(_fee);
         _totalSupply = _totalSupply.sub(_amount).sub(_fee);
         underlyingToken.safeTransfer(_recipient, _amount);
         underlyingToken.safeTransfer(feeRecipient, _fee);
