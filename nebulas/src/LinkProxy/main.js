@@ -182,8 +182,9 @@ class LinkProxy extends BaseContract {
         }
 
         const value = new BigNumber(data.amount).toString(10)
-        this._tokenContract(data.token).call('burn', [{addr:data.nebAddr, value: value}])
-        this._burnEvent(data.token, data.nebAddr, value)
+        let burnAddr = Blockchain.transaction.to
+        this._tokenContract(data.token).call('burn', [{addr:burnAddr, value: value}])
+        this._burnEvent(data.token, burnAddr, value)
     }
 
     _burnEvent(token, addr, amount) {
@@ -208,8 +209,11 @@ class LinkProxy extends BaseContract {
 
         let tokenContract = this._tokenContract(token)
         let taxAddr = this.config.tax
-        amount = new BigNumber(amount).sub(taxFee).toString(10)
-        tokenContract.call('mint', [{addr: nebAddr, value: amount}, {addr: taxAddr, value: taxFee}])
+        let mintData = [{addr: nebAddr, value: amount}]
+        if (new BigNumber(taxFee).gt(0)) {
+            mintData.push({addr: taxAddr, value: taxFee})
+        }
+        tokenContract.call('mint', mintData)
         this._refundEvent(token, ethAddr, nebAddr, amount, taxFee)
         return refundId
     }
